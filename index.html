@@ -1,92 +1,133 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitor do Sensor ESP32</title>
+    <title>Monitor de Luminosidade</title>
 
     <style>
         body {
             font-family: Arial, sans-serif;
+            background: #f2f2f2;
+            margin: 0;
+            padding: 30px;
             text-align: center;
-            margin: 50px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #status {
+            margin: 20px;
+            font-weight: bold;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 220px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .valor {
-            font-size: 64px;
+            font-size: 32px;
             font-weight: bold;
-            margin: 30px;
-        }
-
-        .barra {
-            width: 300px;
-            height: 20px;
-            background-color: #ddd;
-            margin: 20px auto;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .progresso {
-            width: 0%;
-            height: 100%;
-            background-color: #28a745;
-            transition: width 0.3s;
+            color: #2563eb;
         }
 
         button {
             padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 6px;
             cursor: pointer;
+            background: #2563eb;
+            color: white;
+        }
+
+        button:hover {
+            background: #1d4ed8;
         }
     </style>
 </head>
 
 <body>
 
-    <h1>Monitor do Sensor</h1>
+    <h1>Monitor de Luminosidade</h1>
 
     <p id="status">Desconectado</p>
 
-    <div class="valor">
-        <span id="leitura">--</span>
-    </div>
+    <button onclick="conectar()">Conectar</button>
 
-    <div class="barra">
-        <div class="progresso" id="progresso"></div>
-    </div>
+    <div class="container">
 
-    <button onclick="conectar()">Conectar ao ESP32</button>
+        <div class="card">
+            <h2>Luminosidade</h2>
+            <p class="valor">
+                <span id="lux">--</span>
+            </p>
+            <p>Lux</p>
+        </div>
+
+        <div class="card">
+            <h2>Iluminação</h2>
+            <p class="valor">
+                <span id="porcentagem">--</span>
+            </p>
+            <p>Porcentagem</p>
+        </div>
+
+    </div>
 
     <script>
         let ws;
 
         function conectar() {
-            ws = new WebSocket("ws://IP_DO_ESP32/ws");
 
-            ws.onopen = () => {
-                document.getElementById("status").textContent = "Conectado";
+            ws = new WebSocket("ws://ESP_IP/ws");
 
-                ws.send("conectado");
+            ws.onopen = function() {
+                document.getElementById("status").textContent =
+                    "Conectado ao ESP32";
             };
 
-            ws.onmessage = (event) => {
-                const valor = Number(event.data);
+            ws.onmessage = function(event) {
 
-                document.getElementById("leitura").textContent = valor;
-                document.getElementById("progresso").style.width = valor + "%";
+                try {
+                    const dados = JSON.parse(event.data);
+
+                    document.getElementById("lux").textContent =
+                        Number(dados.lux).toFixed(2);
+
+                    document.getElementById("porcentagem").textContent =
+                        Number(dados.percentage).toFixed(2) + " %";
+
+                } catch (erro) {
+                    console.error("Erro ao interpretar os dados:", erro);
+                }
             };
 
-            ws.onerror = () => {
-                document.getElementById("status").textContent = "Erro na conexão";
+            ws.onerror = function() {
+                document.getElementById("status").textContent =
+                    "Erro na conexão";
             };
 
-            ws.onclose = () => {
-                document.getElementById("status").textContent = "Desconectado";
+            ws.onclose = function() {
+                document.getElementById("status").textContent =
+                    "Desconectado";
             };
         }
     </script>
 
 </body>
-
 </html>
