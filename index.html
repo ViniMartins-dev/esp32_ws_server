@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor do Sensor ESP32</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+
+        .valor {
+            font-size: 64px;
+            font-weight: bold;
+            margin: 30px;
+        }
+
+        .barra {
+            width: 300px;
+            height: 20px;
+            background-color: #ddd;
+            margin: 20px auto;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progresso {
+            width: 0%;
+            height: 100%;
+            background-color: #28a745;
+            transition: width 0.3s;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Monitor do Sensor</h1>
+
+    <p id="status">Desconectado</p>
+
+    <div class="valor">
+        <span id="leitura">--</span>
+    </div>
+
+    <div class="barra">
+        <div class="progresso" id="progresso"></div>
+    </div>
+
+    <button onclick="conectar()">Conectar ao ESP32</button>
+
+    <script>
+        let ws;
+
+        function conectar() {
+            ws = new WebSocket("ws://IP_DO_ESP32/ws");
+
+            ws.onopen = () => {
+                document.getElementById("status").textContent = "Conectado";
+
+                ws.send("conectado");
+            };
+
+            ws.onmessage = (event) => {
+                const valor = Number(event.data);
+
+                document.getElementById("leitura").textContent = valor;
+                document.getElementById("progresso").style.width = valor + "%";
+            };
+
+            ws.onerror = () => {
+                document.getElementById("status").textContent = "Erro na conexão";
+            };
+
+            ws.onclose = () => {
+                document.getElementById("status").textContent = "Desconectado";
+            };
+        }
+    </script>
+
+</body>
+
+</html>
