@@ -62,7 +62,7 @@
         let ws;
 
         function conectar() {
-            ws = new WebSocket("ws://IP_DO_ESP32/ws");
+            ws = new WebSocket("ws://192.168.0.25/ws");
 
             ws.onopen = () => {
                 document.getElementById("status").textContent = "Conectado";

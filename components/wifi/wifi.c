@@ -10,8 +10,8 @@
 #include "esp_netif.h"
 #include "esp_log.h"
 
-#define WIFI_SSID     "WIFI_SSID"
-#define WIFI_PASSWORD "WIFI_PASSWORD"
+#define WIFI_SSID     "Vinicius"
+#define WIFI_PASSWORD "Nathan3012_"
 
 #define WIFI_CONNECTED_BIT BIT0
 
