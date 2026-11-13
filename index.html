@@ -35,6 +35,11 @@
             transition: width 0.3s;
         }
 
+        input {
+            padding: 10px;
+            width: 180px;
+        }
+
         button {
             padding: 10px 20px;
             cursor: pointer;
@@ -48,6 +53,10 @@
 
     <p id="status">Desconectado</p>
 
+    <input type="text" id="ip" placeholder="IP do ESP32">
+
+    <button onclick="conectar()">Conectar</button>
+
     <div class="valor">
         <span id="leitura">--</span>
     </div>
@@ -56,33 +65,55 @@
         <div class="progresso" id="progresso"></div>
     </div>
 
-    <button onclick="conectar()">Conectar ao ESP32</button>
-
     <script>
         let ws;
 
         function conectar() {
-            ws = new WebSocket("ws://192.168.0.25/ws");
+            const ip = document.getElementById("ip").value.trim();
+
+            if (!ip) {
+                alert("Digite o IP do ESP32!");
+                return;
+            }
+
+            // Fecha a conexão anterior, se existir
+            if (ws) {
+                ws.close();
+            }
+
+            document.getElementById("status").textContent = "Conectando...";
+
+            ws = new WebSocket(`ws://${ip}/ws`);
 
             ws.onopen = () => {
                 document.getElementById("status").textContent = "Conectado";
-
                 ws.send("conectado");
             };
 
             ws.onmessage = (event) => {
                 const valor = Number(event.data);
 
-                document.getElementById("leitura").textContent = valor;
-                document.getElementById("progresso").style.width = valor + "%";
+                if (!Number.isFinite(valor)) {
+                    return;
+                }
+
+                document.getElementById("leitura").textContent =
+                    valor.toFixed(2) + " lux";
+
+                const porcentagem = (valor / 763) * 100;
+
+                document.getElementById("progresso").style.width =
+                    Math.min(Math.max(porcentagem, 0), 100) + "%";
             };
 
             ws.onerror = () => {
-                document.getElementById("status").textContent = "Erro na conexão";
+                document.getElementById("status").textContent =
+                    "Erro na conexão";
             };
 
             ws.onclose = () => {
-                document.getElementById("status").textContent = "Desconectado";
+                document.getElementById("status").textContent =
+                    "Desconectado";
             };
         }
     </script>

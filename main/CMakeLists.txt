@@ -6,4 +6,6 @@ idf_component_register(
         websocket
         sensor
         nvs_flash
+        lcd
+    PRIV_REQUIRES esp_timer
 )
