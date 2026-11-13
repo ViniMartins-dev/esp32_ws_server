@@ -1,3 +1,4 @@
+
 #include <string.h>
 
 #include "wifi.h"
@@ -9,9 +10,12 @@
 #include "esp_event.h"
 #include "esp_netif.h"
 #include "esp_log.h"
+#include "esp_eap_client.h"
 
-#define WIFI_SSID     "Vinicius"
-#define WIFI_PASSWORD "Nathan3012_"
+#define WIFI_SSID       "eduroam"
+#define WIFI_IDENTITY   "GU3080315"
+#define WIFI_USERNAME   "GU3080315"
+#define WIFI_PASSWORD   "Vm]#5x2A3j"
 
 #define WIFI_CONNECTED_BIT BIT0
 
@@ -37,7 +41,9 @@ static void wifi_event_handler(
              event_id == WIFI_EVENT_STA_DISCONNECTED)
     {
         ESP_LOGW(TAG, "Wi-Fi desconectado. Tentando novamente...");
+
         xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
+
         esp_wifi_connect();
     }
     else if (event_base == IP_EVENT &&
@@ -45,14 +51,15 @@ static void wifi_event_handler(
     {
         ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
 
-        ESP_LOGI(TAG, "IP obtido: " IPSTR, IP2STR(&event->ip_info.ip));
+        ESP_LOGI(TAG, "IP obtido: " IPSTR,
+                 IP2STR(&event->ip_info.ip));
 
         xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
     }
 }
 
 /*
- * Inicializa e conecta o ESP32 ao Wi-Fi.
+ * Inicializa e conecta o ESP32 ao Wi-Fi WPA2-Enterprise.
  */
 esp_err_t wifi_init(void)
 {
@@ -91,22 +98,48 @@ esp_err_t wifi_init(void)
     );
 
     wifi_config_t wifi_config = {
-        .sta = {
-            .ssid = WIFI_SSID,
-            .password = WIFI_PASSWORD
-        }
-    };
+    .sta = {
+        .ssid = WIFI_SSID,
+        .password = WIFI_PASSWORD,
+        .threshold.authmode = WIFI_AUTH_OPEN
+    }
+};
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
 
-    ESP_ERROR_CHECK(esp_wifi_set_config(
-        WIFI_IF_STA,
-        &wifi_config
-    ));
+    ESP_ERROR_CHECK(
+        esp_wifi_set_config(WIFI_IF_STA, &wifi_config)
+    );
+
+    /*
+     * Habilita autenticação WPA2-Enterprise.
+     */
+    ESP_ERROR_CHECK(esp_wifi_sta_enterprise_enable());
+
+    ESP_ERROR_CHECK(
+        esp_eap_client_set_identity(
+            (const unsigned char *)WIFI_IDENTITY,
+            strlen(WIFI_IDENTITY)
+        )
+    );
+
+    ESP_ERROR_CHECK(
+        esp_eap_client_set_username(
+            (const unsigned char *)WIFI_USERNAME,
+            strlen(WIFI_USERNAME)
+        )
+    );
+
+    ESP_ERROR_CHECK(
+        esp_eap_client_set_password(
+            (const unsigned char *)WIFI_PASSWORD,
+            strlen(WIFI_PASSWORD)
+        )
+    );
 
     ESP_ERROR_CHECK(esp_wifi_start());
 
-    ESP_LOGI(TAG, "Aguardando conexão Wi-Fi...");
+    ESP_LOGI(TAG, "Aguardando conexão Wi-Fi Enterprise...");
 
     xEventGroupWaitBits(
         wifi_event_group,

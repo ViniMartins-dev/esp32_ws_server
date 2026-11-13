@@ -157,6 +157,7 @@ esp_err_t websocket_start(void)
         .is_websocket = true};
 
     ret = httpd_register_uri_handler(server, &ws_uri);
+    ESP_LOGI(TAG, "Servidor ativo na porta: %d", config.server_port);
 
     if (ret != ESP_OK)
     {

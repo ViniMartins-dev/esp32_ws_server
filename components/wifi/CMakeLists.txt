@@ -5,4 +5,5 @@ idf_component_register(
         esp_wifi
         esp_event
         esp_netif
+        wpa_supplicant
 )
